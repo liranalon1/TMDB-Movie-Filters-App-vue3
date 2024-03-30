@@ -5,7 +5,6 @@
         <router-link :to="{ path: '/' }">
           <div class="logo"><img src="./assets/images/logo.svg" /></div>
         </router-link>
-        <Search />
       </div>
     </header>
 
@@ -14,8 +13,7 @@
 </template>
 
 <script setup lang="ts">
-  import Search from './components/Search.vue';
-
+  
 </script>
 
 <style lang="scss">

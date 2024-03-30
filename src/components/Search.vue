@@ -10,10 +10,13 @@
 
 <script setup lang="ts">
     import SearchResults from '../components/SearchResults.vue'
-    import { ref, computed, onMounted, onUnmounted } from 'vue';
+    import { ref, computed, onMounted, onUnmounted, defineEmits } from 'vue';
     import { debounce } from '../utils';
     import { Movie } from '../types';
     import { searchMovies } from '../services';
+    import { useStore } from '../store';
+
+    const emits = defineEmits(['update-array']);
 
     const loaderSmall = ref(false);
     const searchQuery = ref('');
@@ -41,12 +44,13 @@
     };
 
     async function handleSearch() {
-        loaderSmall.value = true;
+        // loaderSmall.value = true;
         const data = await searchMovies(searchQuery.value);
         if (data) {
-            searchResults.value = data;
-            loaderSmall.value = false;
-            showResults.value = true;
+            emits('update-array', data);
+            // searchResults.value = data;
+            // loaderSmall.value = false;
+            // showResults.value = true;
         }
     };
 

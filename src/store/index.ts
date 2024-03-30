@@ -4,6 +4,7 @@ import { Movie } from '../types'
 export const useStore = defineStore('movies', {
   state: () => ({
     storedMovies: [] as Movie[],
+    storedSearchedMovies: [] as Movie[],
     pageNumber: 1 as number,
     selectedDiscover: 'popular' as string,
     storedGenre: 'All' as string,
@@ -11,6 +12,10 @@ export const useStore = defineStore('movies', {
   }),
   actions: {
     updateStoredMovies(arr: Movie[]) {
+      this.storedMovies = arr;
+    },
+
+    updateStoredSearchedMovies(arr: Movie[]) {
       this.storedMovies = arr;
     },
 

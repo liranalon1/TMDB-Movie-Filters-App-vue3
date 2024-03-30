@@ -1,39 +1,19 @@
 <template>
   <div v-if="isLoading" class="loader"></div>
+  <Search @update-array="updateArray"/>
 
   <div class="main-wrap flex">
-  
-    <!-- sideBar -->
-    <div class="side-bar">
-      <div class="filter flex" v-if="genres.length">
-        <div class="filter-group">
-          <h2>Discover</h2>
-          <ul class="flex">
-            <li :class="{ active: activeDiscoverTab === 'popular' }" @click="handleDiscoverTab('popular')">Popular</li>
-            <li :class="{ active: activeDiscoverTab === 'topRated' }" @click="handleDiscoverTab('topRated')">Top Rated</li>
-          </ul>
-        </div>
-        <div class="filter-group">
-          <h2>Genres</h2>
-          <ul class="flex">
-            <li :class="{ active: selectedGenre === 'All' }" @click="handleSelectedGenre({genre: 'All'})">All</li>
-            <li v-for="genre in genres" :key="genre.id" :class="{ active: selectedGenre === genre.name }" @click="handleSelectedGenre({genre: genre.name, genre_id: genre.id})">{{ genre.name }}</li>
-          </ul>
-        </div>        
-      </div>
-    </div>
-    <!-- /sideBar -->
-
     <div class="container">
       <h1 v-if="movies.length">{{ title }} Movies</h1>
-      <Movies :movies="movies" />
+      <Movies :movies="displayedData" />
     </div>
 
   </div>    
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import Search from '../components/Search.vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import Movies from '../components/Movies.vue';
 import { useStore } from '../store';
 import { Movie, OptionsToSort, TitleOptions } from "../types";
@@ -70,6 +50,16 @@ const title = ref<string>(titleOptions[activeDiscoverTab.value]);
 const movies = ref<Movie[]>([]);
 const selectedGenre = ref<string>(storedGenre);
 const selectedGenreID = ref<number | null>(storedGenreID);
+
+const displayedData = computed(() => {
+  return dataArray.value.length ? dataArray.value : movies.value;
+});
+
+const dataArray = ref([]);
+
+const updateArray = (newArray: number[]) => {
+  dataArray.value = newArray;
+};
 
 async function handleDiscoverTab(tab: string) {
     if (activeDiscoverTab.value === tab) return;
@@ -161,49 +151,6 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 @import '../assets/scss/variables.scss';
-
-.side-bar {
-    width: 200px;
-    padding: 20px;
-
-    .filter {
-      position: sticky;
-      top: 90px;
-      flex-direction: column;
-      gap: 30px;
-      margin-top: 70px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      max-height: 80vh;    
-
-      h2 {
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 20px;    
-      }
-
-      ul{
-        flex-direction: column;
-        gap: 10px;
-        padding: 0 10px;
-
-        li{
-          width: fit-content;
-          cursor: pointer;
-          font-size: 15px;
-          transition: 0.2s;
-
-          &:hover, &.active  {
-            color: $gold-color;
-          }
-
-          &.active {
-            font-weight: bold;
-          }
-        }
-      }
-    }    
-}
 
 h1 {
   font-size: 24px;

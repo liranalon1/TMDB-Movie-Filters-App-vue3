@@ -54,20 +54,32 @@ async function searchMovies(query: string) {
               api_key: api_key,
               language: "en-US",
               query: query,
-              include_adult: false,
               page: 1
           }
         });
         
-        const  data = response.data.results.map((movie: Movie) => ({
+
+        const moviesWithGenres = await response.data.results.map((movie: Movie) => {
+          const genresList = movie.genre_ids.map((id: number) => {
+            const genre = genres.find((genre) => genre.id === id);
+            return genre ? genre.name : '';
+          });
+          return {
             id: movie.id,
             title: movie.title,
-            poster: `https://image.tmdb.org/t/p/original${movie.poster_path}`,
-            release_year: parseInt(movie.release_date?.substring(0, 4)),
+            release_year: parseInt(movie.release_date.substring(0, 4)) || "Unknown year",
+            genres: genresList,
             vote_average: parseFloat(movie.vote_average.toFixed(1)),
-        }));
+            overview: movie.overview,
+            cast: [],
+            director: '',
+            poster: `https://image.tmdb.org/t/p/w370_and_h556_bestv2${movie.poster_path}`
+          };
+        });
+        
+        return moviesWithGenres;
+        
 
-        return data;
     } catch (error) {
         console.error('Error searching movies:', error);
     }
