@@ -30,7 +30,7 @@
             </li>
           </ul>
         </div>         
-        <div class="filter-group">
+        <!-- <div class="filter-group">
           <h2>Genres</h2>
           <ul class="flex">
             <li :class="{ active: selectedGenre === 'All' }" @click="handleActiveGenre('All')"><a>All</a></li>
@@ -42,7 +42,7 @@
               <a>{{ genre.name }}</a>
             </li>
           </ul>
-        </div>        
+        </div>         -->
       </div>
     </div>
     <!-- /sideBar -->
@@ -129,8 +129,7 @@ function handleFilterOptions({genre}) {
         movie.vote_average >= fromRatingValue && 
         movie.vote_average <= toRatingValue &&
         movie.release_year >= fromYearValue &&
-        movie.release_year <= toYearValue &&
-        movie.genres.includes(genre)
+        movie.release_year <= toYearValue
       );
     });
 }
