@@ -23,25 +23,8 @@ async function getMovies(sort_by: string | number) {
 
     try {
       const response = await axios.get(`${base_url}/discover/movie`, {params});
-      const moviesWithGenres = await response.data.results.map((movie: Movie) => {
-        const genresList = movie.genre_ids.map((id: number) => {
-          const genre = genres.find((genre) => genre.id === id);
-          return genre ? genre.name : '';
-        });
-        return {
-          id: movie.id,
-          title: movie.title,
-          release_year: parseInt(movie.release_date.substring(0, 4)) || "Unknown year",
-          genres: genresList,
-          vote_average: parseFloat(movie.vote_average.toFixed(1)),
-          overview: movie.overview,
-          cast: [],
-          director: '',
-          poster: `https://image.tmdb.org/t/p/w370_and_h556_bestv2${movie.poster_path}`
-        };
-      });
-      
-      return moviesWithGenres;
+      const data = handleResponse(response);
+      return data;
     } catch (error) {
       console.error('Error fetching movies:', error);
     }
@@ -58,31 +41,33 @@ async function searchMovies(query: string) {
           }
         });
         
-
-        const moviesWithGenres = await response.data.results.map((movie: Movie) => {
-          const genresList = movie.genre_ids.map((id: number) => {
-            const genre = genres.find((genre) => genre.id === id);
-            return genre ? genre.name : '';
-          });
-          return {
-            id: movie.id,
-            title: movie.title,
-            release_year: parseInt(movie.release_date.substring(0, 4)) || "Unknown year",
-            genres: genresList,
-            vote_average: parseFloat(movie.vote_average.toFixed(1)),
-            overview: movie.overview,
-            cast: [],
-            director: '',
-            poster: `https://image.tmdb.org/t/p/w370_and_h556_bestv2${movie.poster_path}`
-          };
-        });
-        
-        return moviesWithGenres;
-        
-
+        const data = handleResponse(response);
+        return data;
     } catch (error) {
         console.error('Error searching movies:', error);
     }
+}
+
+async function handleResponse(res) {
+  const data = await res.data.results.map((movie: Movie) => {
+    const genresList = movie.genre_ids.map((id: number) => {
+      const genre = genres.find((genre) => genre.id === id);
+      return genre ? genre.name : '';
+    });
+    return {
+      id: movie.id,
+      title: movie.title,
+      release_year: parseInt(movie.release_date.substring(0, 4)) || "Unknown year",
+      genres: genresList,
+      vote_average: parseFloat(movie.vote_average.toFixed(1)),
+      overview: movie.overview,
+      cast: [],
+      director: '',
+      poster: `https://image.tmdb.org/t/p/w370_and_h556_bestv2${movie.poster_path}`
+    };
+  });
+
+  return data;
 }
 
 export {api_key, base_url, getMovies, searchMovies}

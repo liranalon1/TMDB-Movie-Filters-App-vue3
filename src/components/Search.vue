@@ -1,24 +1,21 @@
 <template>
+    <div v-if="isLoading" class="loader"></div>
     <div class="search">
         <div class="inner">
-            <div v-if="loaderSmall" class="small-loader"></div>
             <input type="text" v-model="searchQuery" @input="search" placeholder="Search for a movie" autofocus />
         </div>
-        <SearchResults v-if="showResults && filteredResults.length" :results="filteredResults" @closeResults="isClose" />
     </div>
 </template>
 
 <script setup lang="ts">
-    import SearchResults from '../components/SearchResults.vue'
     import { ref, computed, onMounted, onUnmounted, defineEmits } from 'vue';
     import { debounce } from '../utils';
     import { Movie } from '../types';
     import { searchMovies } from '../services';
-    import { useStore } from '../store';
 
     const emits = defineEmits(['update-array']);
 
-    const loaderSmall = ref(false);
+    const isLoading = ref(false);
     const searchQuery = ref('');
     const searchResults = ref<Movie[]>([]);
     const showResults = ref(false);
@@ -30,10 +27,6 @@
         );
     });
 
-    function isClose(newValue: boolean) {
-        showResults.value = newValue;
-    };
-
     function handleClickOutside(event: MouseEvent) {
         const target = event.target as HTMLElement;
         const searchElem = document.querySelector('.search');
@@ -44,13 +37,11 @@
     };
 
     async function handleSearch() {
-        // loaderSmall.value = true;
+        isLoading.value = true;
         const data = await searchMovies(searchQuery.value);
         if (data) {
             emits('update-array', data);
-            // searchResults.value = data;
-            // loaderSmall.value = false;
-            // showResults.value = true;
+            isLoading.value = false;
         }
     };
 
