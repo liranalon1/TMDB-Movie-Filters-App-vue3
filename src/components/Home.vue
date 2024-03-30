@@ -1,8 +1,33 @@
 <template>
   <div v-if="isLoading" class="loader"></div>
   <Search @update-array="updateArray"/>
-
   <div class="main-wrap flex">
+
+<!-- sideBar -->
+<div class="side-bar">
+      <div class="filter flex" v-if="genres.length">
+        <h2>Filter</h2>
+        <div class="filter-group">
+          <h2>Rating</h2>
+          <ul class="flex">
+            <div class="rating-box">
+              <input type="number" class="from" value="" placeholder="e.g. 1.0" step="0.1" min="1" max="10" v-model="fromInput" @blur="filterDisplayedData">
+              to
+              <input type="number" class="to" value="" placeholder="e.g. 10.0" step="0.1" min="1" max="10" v-model="toInput" @blur="filterDisplayedData">
+            </div>
+          </ul>
+        </div>
+        <div class="filter-group">
+          <h2>Genres</h2>
+          <ul class="flex">
+            <li :class="{ active: selectedGenre === 'All' }" @click="handleSelectedGenre({genre: 'All'})">All</li>
+            <li v-for="genre in genres" :key="genre.id" :class="{ active: selectedGenre === genre.name }" @click="handleSelectedGenre({genre: genre.name, genre_id: genre.id})">{{ genre.name }}</li>
+          </ul>
+        </div>        
+      </div>
+    </div>
+    <!-- /sideBar -->
+
     <div class="container">
       <h1 v-if="movies.length">{{ title }} Movies</h1>
       <Movies :movies="displayedData" />
@@ -50,29 +75,26 @@ const title = ref<string>(titleOptions[activeDiscoverTab.value]);
 const movies = ref<Movie[]>([]);
 const selectedGenre = ref<string>(storedGenre);
 const selectedGenreID = ref<number | null>(storedGenreID);
+const fromInput = ref<HTMLInputElement | null>(null);
+const toInput = ref<HTMLInputElement | null>(null);
+const dataArray = ref<Movie[]>([]);
 
 const displayedData = computed(() => {
   return dataArray.value.length ? dataArray.value : movies.value;
 });
 
-const dataArray = ref([]);
-
-const updateArray = (newArray: number[]) => {
+function updateArray(newArray: Movie[]) {
   dataArray.value = newArray;
 };
 
-async function handleDiscoverTab(tab: string) {
-    if (activeDiscoverTab.value === tab) return;
-    activeDiscoverTab.value = tab;
-    updateStoredDiscover(activeDiscoverTab.value);
-    resetPageNumber();
-    resetGenre();
-    movies.value = [];
-    isLoading.value = true;
-    await handleMovies(sortOptions[tab]);
-    title.value = titleOptions[activeDiscoverTab.value];
-    isLoading.value = false;
-}
+function filterDisplayedData() {
+  const fromValue = fromInput.value ? parseFloat(fromInput.value) : 0;
+  const toValue = toInput.value ? parseFloat(toInput.value) : 10;
+
+  dataArray.value = movies.value.filter(movie => {
+    return movie.vote_average >= fromValue && movie.vote_average <= toValue;
+  });
+};
 
 async function handleMovies(sort_by: string | number) {
     const data = await getMovies(sort_by);
@@ -151,6 +173,49 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 @import '../assets/scss/variables.scss';
+
+.side-bar {
+    width: 300px;
+    padding: 20px;
+
+    .filter {
+      position: sticky;
+      top: 90px;
+      flex-direction: column;
+      gap: 30px;
+      margin-top: 70px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      max-height: 80vh;    
+
+      h2 {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 20px;    
+      }
+
+      ul{
+        flex-direction: column;
+        gap: 10px;
+        padding: 0 10px;
+
+        li{
+          width: fit-content;
+          cursor: pointer;
+          font-size: 15px;
+          transition: 0.2s;
+
+          &:hover, &.active  {
+            color: $gold-color;
+          }
+
+          &.active {
+            font-weight: bold;
+          }
+        }
+      }
+    }    
+}
 
 h1 {
   font-size: 24px;
