@@ -1,22 +1,35 @@
 <template>
   <div v-if="isLoading" class="loader"></div>
-  <Search @update-array="updateArray"/>
+  <div class="filter-wrap flex">
+    <Search @update-array="updateArray"/>
+    <button @click="handleFilter">Filter</button>
+  </div>
   <div class="main-wrap flex">
 
 <!-- sideBar -->
-<div class="side-bar">
+<div class="side-bar" v-if="showFilter">
       <div class="filter flex" v-if="genres.length">
         <h2>Filter</h2>
         <div class="filter-group">
           <h2>Rating</h2>
           <ul class="flex">
-            <div class="rating-box">
-              <input type="number" class="from" value="" placeholder="e.g. 1.0" step="0.1" min="1" max="10" v-model="fromInput" @blur="filterDisplayedData">
+            <li class="rating-box">
+              <input type="number" class="from" value="" placeholder="e.g. 1.0" step="0.1" min="1" max="10" v-model="fromRating" @blur="filterDisplayedData">
               to
-              <input type="number" class="to" value="" placeholder="e.g. 10.0" step="0.1" min="1" max="10" v-model="toInput" @blur="filterDisplayedData">
-            </div>
+              <input type="number" class="to" value="" placeholder="e.g. 10.0" step="0.1" min="1" max="10" v-model="toRating" @blur="filterDisplayedData">
+            </li>
           </ul>
         </div>
+        <div class="filter-group">
+          <h2>Release Year</h2>
+          <ul class="flex">
+            <li class="year-box">
+              <input type="number" class="from" value="" placeholder="e.g. 2000" min="1900" max="2024" v-model="fromYear" @blur="filterDisplayedData">
+              to
+              <input type="number" class="to" value="" placeholder="e.g. 2024" min="1900" max="2024" v-model="toYear" @blur="filterDisplayedData">
+            </li>
+          </ul>
+        </div>         
         <div class="filter-group">
           <h2>Genres</h2>
           <ul class="flex">
@@ -69,32 +82,52 @@ const titleOptions: TitleOptions = {
     'topRated': 'Top Rated'
 };  
 
-const isLoading = ref(false);
+const isLoading = ref<boolean>(false);
+const showFilter = ref<boolean>(false);
 const activeDiscoverTab = ref<string>(selectedDiscover);
 const title = ref<string>(titleOptions[activeDiscoverTab.value]);
 const movies = ref<Movie[]>([]);
 const selectedGenre = ref<string>(storedGenre);
 const selectedGenreID = ref<number | null>(storedGenreID);
-const fromInput = ref<HTMLInputElement | null>(null);
-const toInput = ref<HTMLInputElement | null>(null);
+
+const fromRating = ref<string>('');
+const toRating = ref<string>('');
+
+const fromYear = ref<number | null>(null);
+const toYear = ref<number | null>(null);
+
+
+
 const dataArray = ref<Movie[]>([]);
 
 const displayedData = computed(() => {
   return dataArray.value.length ? dataArray.value : movies.value;
 });
 
+function handleFilter() {
+  showFilter.value = !showFilter.value;
+}
+
 function updateArray(newArray: Movie[]) {
   dataArray.value = newArray;
 };
 
 function filterDisplayedData() {
-  const fromValue = fromInput.value ? parseFloat(fromInput.value) : 0;
-  const toValue = toInput.value ? parseFloat(toInput.value) : 10;
+  const fromRatingValue = fromRating.value ? parseFloat(fromRating.value) : 0;
+  const toRatingValue = toRating.value ? parseFloat(toRating.value) : 10;
+
+  const fromYearValue = fromYear.value || 1900;
+  const toYearValue = toYear.value || 2024;
 
   dataArray.value = movies.value.filter(movie => {
-    return movie.vote_average >= fromValue && movie.vote_average <= toValue;
+    return (
+      movie.vote_average >= fromRatingValue && 
+      movie.vote_average <= toRatingValue &&
+      movie.release_year >= fromYearValue &&
+      movie.release_year <= toYearValue
+    );
   });
-};
+}
 
 async function handleMovies(sort_by: string | number) {
     const data = await getMovies(sort_by);
@@ -174,8 +207,13 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 @import '../assets/scss/variables.scss';
 
+.filter-wrap {
+  gap: 10px;
+  align-items: center;
+}
+
 .side-bar {
-    width: 300px;
+    width: 400px;
     padding: 20px;
 
     .filter {
@@ -211,6 +249,13 @@ onUnmounted(() => {
 
           &.active {
             font-weight: bold;
+          }
+
+          input {
+            all: revert;
+            border-radius: 5px;
+            outline: none;
+            padding: 5px;
           }
         }
       }
