@@ -17,7 +17,7 @@
         </div>
     </div>
     <div v-else>
-        <!-- <p>No movies found.</p> -->
+        <p>No movies found.</p>
     </div>     
 </template>
   
@@ -36,7 +36,9 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         grid-gap: 20px;
-        align-items: stretch;        
+        align-items: stretch; 
+        margin-top: 40px;       
+
         .card {
             height: 100%;
             border-radius: 5px;

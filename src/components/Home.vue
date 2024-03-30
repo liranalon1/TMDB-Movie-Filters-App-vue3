@@ -1,7 +1,7 @@
 <template>
   <div v-if="isLoading" class="loader"></div>
   <div class="filter-wrap flex">
-    <Search @update-array="updateArray"/>
+    <Search @update-movies="updateMovies" @update-query="updateSearchQuery"/>
     <button @click="handleFilter">Filter</button>
   </div>
   <div class="main-wrap flex">
@@ -9,14 +9,14 @@
 <!-- sideBar -->
 <div class="side-bar" v-if="showFilter">
       <div class="filter flex" v-if="genres.length">
-        <h2>Filter</h2>
+        <h2>Search filters</h2>
         <div class="filter-group">
           <h2>Rating</h2>
           <ul class="flex">
             <li class="rating-box">
-              <input type="number" class="from" value="" placeholder="e.g. 1.0" step="0.1" min="1" max="10" v-model="fromRating" @blur="filterDisplayedData">
+              <input type="number" class="from" value="" placeholder="e.g. 1.0" step="0.1" min="1" max="10" v-model="fromRating" @blur="handleFilterOptions">
               to
-              <input type="number" class="to" value="" placeholder="e.g. 10.0" step="0.1" min="1" max="10" v-model="toRating" @blur="filterDisplayedData">
+              <input type="number" class="to" value="" placeholder="e.g. 10.0" step="0.1" min="1" max="10" v-model="toRating" @blur="handleFilterOptions">
             </li>
           </ul>
         </div>
@@ -24,17 +24,23 @@
           <h2>Release Year</h2>
           <ul class="flex">
             <li class="year-box">
-              <input type="number" class="from" value="" placeholder="e.g. 2000" min="1900" max="2024" v-model="fromYear" @blur="filterDisplayedData">
+              <input type="number" class="from" value="" placeholder="e.g. 2000" min="1900" max="2024" v-model="fromYear" @blur="handleFilterOptions">
               to
-              <input type="number" class="to" value="" placeholder="e.g. 2024" min="1900" max="2024" v-model="toYear" @blur="filterDisplayedData">
+              <input type="number" class="to" value="" placeholder="e.g. 2024" min="1900" max="2024" v-model="toYear" @blur="handleFilterOptions">
             </li>
           </ul>
         </div>         
         <div class="filter-group">
           <h2>Genres</h2>
           <ul class="flex">
-            <li :class="{ active: selectedGenre === 'All' }" @click="handleSelectedGenre({genre: 'All'})">All</li>
-            <li v-for="genre in genres" :key="genre.id" :class="{ active: selectedGenre === genre.name }" @click="handleSelectedGenre({genre: genre.name, genre_id: genre.id})">{{ genre.name }}</li>
+            <li :class="{ active: selectedGenre === 'All' }" @click="handleSelectedGenre({genre: 'All'})"><a>All</a></li>
+            <li v-for="genre in genres" 
+              :key="genre.id" 
+              :class="{ active: selectedGenre === genre.name }" 
+              @click="handleSelectedGenre({genre: genre.name, genre_id: genre.id})"
+            >
+              <a>{{ genre.name }}</a>
+            </li>
           </ul>
         </div>        
       </div>
@@ -42,8 +48,7 @@
     <!-- /sideBar -->
 
     <div class="container">
-      <h1 v-if="movies.length">{{ title }} Movies</h1>
-      <Movies :movies="displayedData" />
+      <Movies :movies="moviesToShow" />
     </div>
 
   </div>    
@@ -51,25 +56,28 @@
 
 <script setup lang="ts">
 import Search from '../components/Search.vue';
-import { ref, onMounted, onUnmounted, computed } from 'vue';
 import Movies from '../components/Movies.vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useStore } from '../store';
-import { Movie, OptionsToSort, TitleOptions } from "../types";
+import { Movie, OptionsToSort } from "../types";
 import { getMovies } from '../services';
 import { genres } from '../utils';
 
 const { 
-  selectedDiscover,
   storedGenre,
   storedGenreID,
   storedMovies,
+  storedMoviesFromSearch,
+  storedSearchQuery,
+  storedShowFilter,
+  updateStoredMoviesFromSearch,
   updateStoredMovies, 
-  updateStoredDiscover, 
   updateStoredGenre, 
   updateStoredGenreID,
+  updateStoredShowFilter,
   resetPageNumber, 
   resetMoviesList, 
-  incrementPageNumber 
+  incrementPageNumber,
 } = useStore();
 
 const sortOptions: OptionsToSort = {
@@ -77,56 +85,53 @@ const sortOptions: OptionsToSort = {
     'topRated': 'vote_count.desc'
 };  
 
-const titleOptions: TitleOptions = {
-    'popular': 'Popular',
-    'topRated': 'Top Rated'
-};  
-
 const isLoading = ref<boolean>(false);
-const showFilter = ref<boolean>(false);
-const activeDiscoverTab = ref<string>(selectedDiscover);
-const title = ref<string>(titleOptions[activeDiscoverTab.value]);
+const showFilter = ref<boolean>(storedShowFilter);
 const movies = ref<Movie[]>([]);
+const moviesFromSearch = ref<Movie[]>(storedMoviesFromSearch);
+const searchQuery = ref<string>(storedSearchQuery);
 const selectedGenre = ref<string>(storedGenre);
 const selectedGenreID = ref<number | null>(storedGenreID);
-
 const fromRating = ref<string>('');
 const toRating = ref<string>('');
-
 const fromYear = ref<number | null>(null);
 const toYear = ref<number | null>(null);
 
-
-
-const dataArray = ref<Movie[]>([]);
-
-const displayedData = computed(() => {
-  return dataArray.value.length ? dataArray.value : movies.value;
+const moviesToShow = computed(() => {
+  return moviesFromSearch.value.length ? moviesFromSearch.value : movies.value;
 });
 
 function handleFilter() {
   showFilter.value = !showFilter.value;
+  updateStoredShowFilter(showFilter.value);
 }
 
-function updateArray(newArray: Movie[]) {
-  dataArray.value = newArray;
+function updateMovies(newArray: Movie[]) {
+  updateStoredMoviesFromSearch(newArray);
+  moviesFromSearch.value = newArray;
 };
 
-function filterDisplayedData() {
+function updateSearchQuery(value: string) {
+  searchQuery.value = value;
+};
+
+function handleFilterOptions() {
   const fromRatingValue = fromRating.value ? parseFloat(fromRating.value) : 0;
   const toRatingValue = toRating.value ? parseFloat(toRating.value) : 10;
 
   const fromYearValue = fromYear.value || 1900;
   const toYearValue = toYear.value || 2024;
 
-  dataArray.value = movies.value.filter(movie => {
-    return (
-      movie.vote_average >= fromRatingValue && 
-      movie.vote_average <= toRatingValue &&
-      movie.release_year >= fromYearValue &&
-      movie.release_year <= toYearValue
-    );
-  });
+  let currentMovies = moviesFromSearch.value.length ? moviesFromSearch.value : movies.value;
+
+  moviesFromSearch.value = currentMovies.filter(movie => {
+      return (
+        movie.vote_average >= fromRatingValue && 
+        movie.vote_average <= toRatingValue &&
+        movie.release_year >= fromYearValue &&
+        movie.release_year <= toYearValue
+      );
+    });
 }
 
 async function handleMovies(sort_by: string | number) {
@@ -146,7 +151,7 @@ async function loadMore() {
     if(selectedGenreID.value !== null){
         param = selectedGenreID.value
     }else{
-        param = sortOptions[activeDiscoverTab.value]
+        param = sortOptions['popular']
     }
 
     await handleMovies(param);
@@ -159,18 +164,12 @@ async function handleSelectedGenre({genre, genre_id }: {genre: string, genre_id?
     selectedGenreID.value = genre_id || null;
     updateStoredGenre(selectedGenre.value);
     updateStoredGenreID(selectedGenreID.value);
-    resetDiscover();
     resetPageNumber();
     resetMoviesList();
     movies.value = [];
     isLoading.value = true;
     await handleMovies(genre_id);
     isLoading.value = false;
-}
-
-function resetDiscover() {
-    activeDiscoverTab.value = "";
-    updateStoredDiscover("");
 }
 
 function resetGenre() {
@@ -243,11 +242,8 @@ onUnmounted(() => {
           font-size: 15px;
           transition: 0.2s;
 
-          &:hover, &.active  {
+          &.active  {
             color: $gold-color;
-          }
-
-          &.active {
             font-weight: bold;
           }
 
@@ -260,10 +256,5 @@ onUnmounted(() => {
         }
       }
     }    
-}
-
-h1 {
-  font-size: 24px;
-  margin: 40px 0 20px;
 }
 </style>

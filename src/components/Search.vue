@@ -8,24 +8,22 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, onMounted, onUnmounted, defineEmits } from 'vue';
+    import { ref, onMounted, onUnmounted, defineEmits } from 'vue';
     import { debounce } from '../utils';
-    import { Movie } from '../types';
     import { searchMovies } from '../services';
+    import { useStore } from '../store';
 
-    const emits = defineEmits(['update-array']);
+    const { 
+        storedSearchQuery,
+        updateStoredSearchQuery
+    } = useStore();
+
+    const emits = defineEmits(['update-movies', 'update-query']);
 
     const isLoading = ref(false);
-    const searchQuery = ref('');
-    const searchResults = ref<Movie[]>([]);
+    const searchQuery = ref(storedSearchQuery);
     const showResults = ref(false);
     const search = debounce(handleSearch, 500);
-
-    const filteredResults = computed(() => {
-        return searchResults.value.filter(movie =>
-            movie.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-        );
-    });
 
     function handleClickOutside(event: MouseEvent) {
         const target = event.target as HTMLElement;
@@ -38,9 +36,12 @@
 
     async function handleSearch() {
         isLoading.value = true;
-        const data = await searchMovies(searchQuery.value);
+        const value = searchQuery.value.toLowerCase();
+        updateStoredSearchQuery(value);
+        const data = await searchMovies(value);
         if (data) {
-            emits('update-array', data);
+            emits('update-movies', data);
+            emits('update-query', value);
             isLoading.value = false;
         }
     };

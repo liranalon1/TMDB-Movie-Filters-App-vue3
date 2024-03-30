@@ -4,19 +4,20 @@ import { Movie } from '../types'
 export const useStore = defineStore('movies', {
   state: () => ({
     storedMovies: [] as Movie[],
-    storedSearchedMovies: [] as Movie[],
+    storedMoviesFromSearch: [] as Movie[],
+    storedSearchQuery: '' as string,
     pageNumber: 1 as number,
-    selectedDiscover: 'popular' as string,
     storedGenre: 'All' as string,
     storedGenreID: null as number | null,
+    storedShowFilter: false as boolean,
   }),
   actions: {
     updateStoredMovies(arr: Movie[]) {
       this.storedMovies = arr;
     },
 
-    updateStoredSearchedMovies(arr: Movie[]) {
-      this.storedMovies = arr;
+    updateStoredMoviesFromSearch(arr: Movie[]) {
+      this.storedMoviesFromSearch = arr;
     },
 
     incrementPageNumber() {
@@ -31,16 +32,20 @@ export const useStore = defineStore('movies', {
       this.storedMovies = [];
     },
 
-    updateStoredDiscover(str: string) {
-      this.selectedDiscover = str;
-    },
-
     updateStoredGenre(str: string) {
       this.storedGenre = str;
     },
 
+    updateStoredSearchQuery(str: string) {
+      this.storedSearchQuery = str;
+    },
+
     updateStoredGenreID(num: number | null) {
       this.storedGenreID = num;
+    },
+
+    updateStoredShowFilter(bool: boolean) {
+      this.storedShowFilter = bool;
     },
   }
 });
