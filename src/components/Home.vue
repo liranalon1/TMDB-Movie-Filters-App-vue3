@@ -33,11 +33,11 @@
         <div class="filter-group">
           <h2>Genres</h2>
           <ul class="flex">
-            <li :class="{ active: selectedGenre === 'All' }" @click="handleSelectedGenre({genre: 'All'})"><a>All</a></li>
+            <li :class="{ active: selectedGenre === 'All' }" @click="handleActiveGenre('All')"><a>All</a></li>
             <li v-for="genre in genres" 
               :key="genre.id" 
               :class="{ active: selectedGenre === genre.name }" 
-              @click="handleSelectedGenre({genre: genre.name, genre_id: genre.id})"
+              @click="handleFilterOptions({genre: genre.name}); handleActiveGenre(genre.name)"
             >
               <a>{{ genre.name }}</a>
             </li>
@@ -115,7 +115,7 @@ function updateSearchQuery(value: string) {
   searchQuery.value = value;
 };
 
-function handleFilterOptions() {
+function handleFilterOptions({genre}) {
   const fromRatingValue = fromRating.value ? parseFloat(fromRating.value) : 0;
   const toRatingValue = toRating.value ? parseFloat(toRating.value) : 10;
 
@@ -129,7 +129,8 @@ function handleFilterOptions() {
         movie.vote_average >= fromRatingValue && 
         movie.vote_average <= toRatingValue &&
         movie.release_year >= fromYearValue &&
-        movie.release_year <= toYearValue
+        movie.release_year <= toYearValue &&
+        movie.genres.includes(genre)
       );
     });
 }
@@ -156,6 +157,16 @@ async function loadMore() {
 
     await handleMovies(param);
     isLoading.value = false;
+}
+
+function handleActiveGenre(genre: string) {
+  if(genre !== "All") {
+    selectedGenre.value = genre;
+  }else {
+    selectedGenre.value = "All";
+  }
+  
+  updateStoredGenre(genre);
 }
 
 async function handleSelectedGenre({genre, genre_id }: {genre: string, genre_id?: number | undefined}) {

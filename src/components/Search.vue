@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted, onUnmounted, defineEmits } from 'vue';
+    import { ref, onMounted, onUnmounted } from 'vue';
     import { debounce } from '../utils';
     import { searchMovies } from '../services';
     import { useStore } from '../store';
