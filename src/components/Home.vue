@@ -99,7 +99,7 @@ const moviesToShow = computed(() => {
   const toRatingValue = toRating.value ? parseFloat(toRating.value) : 10;
   const fromYearValue = fromYear.value || 1900;
   const toYearValue = toYear.value || 2024;
-  const genreVal = selectedGenre.value || ""; // Ensure selectedGenre.value is not null
+  const genreVal = selectedGenre.value || "";
 
   const filterCondition = (movie: Movie) => (
     (genreVal === "" || movie.genres.includes(genreVal)) &&
