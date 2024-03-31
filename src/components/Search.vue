@@ -15,7 +15,8 @@
 
     const { 
         storedSearchQuery,
-        updateStoredSearchQuery
+        updateStoredSearchQuery,
+        resetPageNumber,
     } = useStore();
 
     const emits = defineEmits(['update-movies', 'update-query']);
@@ -37,6 +38,7 @@
     async function handleSearch() {
         isLoading.value = true;
         const value = searchQuery.value.toLowerCase();
+        resetPageNumber();
         updateStoredSearchQuery(value);
         const data = await searchMovies(value);
         if (data) {

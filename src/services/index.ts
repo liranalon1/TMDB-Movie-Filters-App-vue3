@@ -31,13 +31,15 @@ async function getMovies(sort_by: string | number) {
 }
 
 async function searchMovies(query: string) {
+    const { pageNumber } = useStore();
+    
     try {
         const response = await axios.get(`${base_url}/search/movie`, {
           params: {
               api_key: api_key,
               language: "en-US",
               query: query,
-              page: 1
+              page: pageNumber
           }
         });
         

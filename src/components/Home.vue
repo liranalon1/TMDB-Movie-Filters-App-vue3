@@ -60,7 +60,7 @@ import Movies from '../components/Movies.vue';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useStore } from '../store';
 import { Movie, OptionsToSort } from "../types";
-import { getMovies } from '../services';
+import { getMovies, searchMovies } from '../services';
 import { genres } from '../utils';
 
 const { 
@@ -98,7 +98,19 @@ const fromYear = ref<number | null>(null);
 const toYear = ref<number | null>(null);
 
 const moviesToShow = computed(() => {
-  return moviesFromSearch.value.length ? moviesFromSearch.value : movies.value;
+  let currentMovies = moviesFromSearch.value.length ? moviesFromSearch.value : movies.value;
+  return currentMovies.filter(movie => {
+    const fromRatingValue = fromRating.value ? parseFloat(fromRating.value) : 0;
+    const toRatingValue = toRating.value ? parseFloat(toRating.value) : 10;
+    const fromYearValue = fromYear.value || 1900;
+    const toYearValue = toYear.value || 2024;
+    return (
+      movie.vote_average >= fromRatingValue && 
+      movie.vote_average <= toRatingValue &&
+      movie.release_year >= fromYearValue &&
+      movie.release_year <= toYearValue
+    );
+  });
 });
 
 function handleFilter() {
@@ -115,25 +127,6 @@ function updateSearchQuery(value: string) {
   searchQuery.value = value;
 };
 
-function handleFilterOptions({genre}) {
-  const fromRatingValue = fromRating.value ? parseFloat(fromRating.value) : 0;
-  const toRatingValue = toRating.value ? parseFloat(toRating.value) : 10;
-
-  const fromYearValue = fromYear.value || 1900;
-  const toYearValue = toYear.value || 2024;
-
-  let currentMovies = moviesFromSearch.value.length ? moviesFromSearch.value : movies.value;
-
-  moviesFromSearch.value = currentMovies.filter(movie => {
-      return (
-        movie.vote_average >= fromRatingValue && 
-        movie.vote_average <= toRatingValue &&
-        movie.release_year >= fromYearValue &&
-        movie.release_year <= toYearValue
-      );
-    });
-}
-
 async function handleMovies(sort_by: string | number) {
     const data = await getMovies(sort_by);
     if (data) {
@@ -147,7 +140,19 @@ async function loadMore() {
     isLoading.value = true;
     incrementPageNumber();
     
+    if( searchQuery.value.length > 0 ) {
+        const data = await searchMovies(searchQuery.value);
+        if (data) {
+            const arr = [...moviesFromSearch.value, ...data];
+            updateMovies(arr)
+            isLoading.value = false;
+        }      
+
+        return
+    }
+
     let param: string | number | null = null;
+
     if(selectedGenreID.value !== null){
         param = selectedGenreID.value
     }else{
@@ -157,6 +162,18 @@ async function loadMore() {
     await handleMovies(param);
     isLoading.value = false;
 }
+
+async function handleSearch() {
+        isLoading.value = true;
+        const value = searchQuery.value.toLowerCase();
+        updateStoredSearchQuery(value);
+        const data = await searchMovies(value);
+        if (data) {
+            emits('update-movies', data);
+            emits('update-query', value);
+            isLoading.value = false;
+        }
+    };
 
 function handleActiveGenre(genre: string) {
   if(genre !== "All") {
