@@ -7,7 +7,7 @@ export const useStore = defineStore('movies', {
     storedMoviesFromSearch: [] as Movie[],
     storedSearchQuery: '' as string,
     pageNumber: 1 as number,
-    storedGenre: 'All' as string,
+    storedGenre: '' as string,
     storedGenreID: null as number | null,
     storedShowFilter: false as boolean,
   }),

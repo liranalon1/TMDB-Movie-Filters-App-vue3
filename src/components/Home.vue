@@ -14,9 +14,9 @@
           <h2>Rating</h2>
           <ul class="flex">
             <li class="rating-box">
-              <input type="number" class="from" value="" placeholder="e.g. 1.0" step="0.1" min="1" max="10" v-model="fromRating" @blur="handleFilterOptions">
+              <input type="number" class="from" value="" placeholder="e.g. 1.0" step="0.1" min="1" max="10" v-model="fromRating">
               to
-              <input type="number" class="to" value="" placeholder="e.g. 10.0" step="0.1" min="1" max="10" v-model="toRating" @blur="handleFilterOptions">
+              <input type="number" class="to" value="" placeholder="e.g. 10.0" step="0.1" min="1" max="10" v-model="toRating">
             </li>
           </ul>
         </div>
@@ -24,25 +24,25 @@
           <h2>Release Year</h2>
           <ul class="flex">
             <li class="year-box">
-              <input type="number" class="from" value="" placeholder="e.g. 2000" min="1900" max="2024" v-model="fromYear" @blur="handleFilterOptions">
+              <input type="number" class="from" value="" placeholder="e.g. 2000" min="1900" max="2024" v-model="fromYear">
               to
-              <input type="number" class="to" value="" placeholder="e.g. 2024" min="1900" max="2024" v-model="toYear" @blur="handleFilterOptions">
+              <input type="number" class="to" value="" placeholder="e.g. 2024" min="1900" max="2024" v-model="toYear">
             </li>
           </ul>
         </div>         
-        <!-- <div class="filter-group">
+        <div class="filter-group">
           <h2>Genres</h2>
           <ul class="flex">
-            <li :class="{ active: selectedGenre === 'All' }" @click="handleActiveGenre('All')"><a>All</a></li>
+            <li :class="{ active: selectedGenre === '' }" @click="handleActiveGenre('')"><a>All</a></li>
             <li v-for="genre in genres" 
               :key="genre.id" 
               :class="{ active: selectedGenre === genre.name }" 
-              @click="handleFilterOptions({genre: genre.name}); handleActiveGenre(genre.name)"
+              @click="handleActiveGenre(genre.name)"
             >
               <a>{{ genre.name }}</a>
             </li>
           </ul>
-        </div>         -->
+        </div>        
       </div>
     </div>
     <!-- /sideBar -->
@@ -73,10 +73,7 @@ const {
   updateStoredMoviesFromSearch,
   updateStoredMovies, 
   updateStoredGenre, 
-  updateStoredGenreID,
   updateStoredShowFilter,
-  resetPageNumber, 
-  resetMoviesList, 
   incrementPageNumber,
 } = useStore();
 
@@ -98,19 +95,23 @@ const fromYear = ref<number | null>(null);
 const toYear = ref<number | null>(null);
 
 const moviesToShow = computed(() => {
-  let currentMovies = moviesFromSearch.value.length ? moviesFromSearch.value : movies.value;
-  return currentMovies.filter(movie => {
-    const fromRatingValue = fromRating.value ? parseFloat(fromRating.value) : 0;
-    const toRatingValue = toRating.value ? parseFloat(toRating.value) : 10;
-    const fromYearValue = fromYear.value || 1900;
-    const toYearValue = toYear.value || 2024;
-    return (
-      movie.vote_average >= fromRatingValue && 
-      movie.vote_average <= toRatingValue &&
-      movie.release_year >= fromYearValue &&
-      movie.release_year <= toYearValue
-    );
-  });
+  const fromRatingValue = fromRating.value ? parseFloat(fromRating.value) : 0;
+  const toRatingValue = toRating.value ? parseFloat(toRating.value) : 10;
+  const fromYearValue = fromYear.value || 1900;
+  const toYearValue = toYear.value || 2024;
+  const genreVal = selectedGenre.value || ""; // Ensure selectedGenre.value is not null
+
+  const filterCondition = (movie: Movie) => (
+    (genreVal === "" || movie.genres.includes(genreVal)) &&
+    movie.vote_average >= fromRatingValue &&
+    movie.vote_average <= toRatingValue &&
+    movie.release_year >= fromYearValue &&
+    movie.release_year <= toYearValue
+  );
+
+  return moviesFromSearch.value.length
+    ? moviesFromSearch.value.filter(filterCondition)
+    : movies.value.filter(filterCondition);
 });
 
 function handleFilter() {
@@ -163,47 +164,14 @@ async function loadMore() {
     isLoading.value = false;
 }
 
-async function handleSearch() {
-        isLoading.value = true;
-        const value = searchQuery.value.toLowerCase();
-        updateStoredSearchQuery(value);
-        const data = await searchMovies(value);
-        if (data) {
-            emits('update-movies', data);
-            emits('update-query', value);
-            isLoading.value = false;
-        }
-    };
-
 function handleActiveGenre(genre: string) {
-  if(genre !== "All") {
+  if(genre !== "") {
     selectedGenre.value = genre;
   }else {
-    selectedGenre.value = "All";
+    selectedGenre.value = "";
   }
   
   updateStoredGenre(genre);
-}
-
-async function handleSelectedGenre({genre, genre_id }: {genre: string, genre_id?: number | undefined}) {
-    if (selectedGenre.value === genre) return;
-    selectedGenre.value = genre;
-    selectedGenreID.value = genre_id || null;
-    updateStoredGenre(selectedGenre.value);
-    updateStoredGenreID(selectedGenreID.value);
-    resetPageNumber();
-    resetMoviesList();
-    movies.value = [];
-    isLoading.value = true;
-    await handleMovies(genre_id);
-    isLoading.value = false;
-}
-
-function resetGenre() {
-    selectedGenre.value = "All";
-    updateStoredGenre("All");
-    updateStoredGenreID(null);
-    selectedGenreID.value = null;
 }
 
 function handleScroll() {
