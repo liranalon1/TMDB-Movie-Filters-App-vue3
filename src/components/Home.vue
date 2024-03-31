@@ -120,6 +120,8 @@ function handleFilter() {
 }
 
 function updateMovies(newArray: Movie[]) {
+  updateStoredGenre("");  
+  selectedGenre.value = "";
   updateStoredMoviesFromSearch(newArray);
   moviesFromSearch.value = newArray;
 };
