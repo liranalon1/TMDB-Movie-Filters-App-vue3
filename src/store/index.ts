@@ -44,8 +44,8 @@ export const useStore = defineStore('movies', {
       this.storedGenreID = num;
     },
 
-    updateStoredShowFilter(bool: boolean) {
-      this.storedShowFilter = bool;
+    toggleShowFilter() {
+      this.storedShowFilter = !this.storedShowFilter;
     },
   }
 });

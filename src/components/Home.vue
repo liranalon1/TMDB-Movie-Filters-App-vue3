@@ -4,41 +4,46 @@
 
 <!-- sideBar -->
 <div class="side-bar" v-if="showFilter">
-      <div class="filter flex" v-if="genres.length">
+      <div class="filter-wrap" v-if="genres.length">
+        <button class="close-filter" @click="toggleShowFilter">X</button>
         <h2>Search filters</h2>
-        <div class="filter-group">
-          <h2>Rating</h2>
-          <ul class="flex">
-            <li class="rating-box">
-              <input type="number" class="from" value="" placeholder="e.g. 1.0" step="0.1" min="1" max="10" v-model="fromRating">
-              to
-              <input type="number" class="to" value="" placeholder="e.g. 10.0" step="0.1" min="1" max="10" v-model="toRating">
-            </li>
-          </ul>
+        
+        <div class="filter-inner flex">
+          <div class="filter-group">
+            <h3>Rating</h3>
+            <ul class="flex">
+              <li class="rating-box">
+                <input type="number" class="from" value="" placeholder="e.g. 1.0" step="0.1" min="1" max="10" v-model="fromRating">
+                to
+                <input type="number" class="to" value="" placeholder="e.g. 10.0" step="0.1" min="1" max="10" v-model="toRating">
+              </li>
+            </ul>
+          </div>
+          <div class="filter-group">
+            <h3>Release Year</h3>
+            <ul class="flex">
+              <li class="year-box">
+                <input type="number" class="from" value="" placeholder="e.g. 2000" min="1900" max="2024" v-model="fromYear">
+                to
+                <input type="number" class="to" value="" placeholder="e.g. 2024" min="1900" max="2024" v-model="toYear">
+              </li>
+            </ul>
+          </div>         
+          <div class="filter-group">
+            <h3>Genres</h3>
+            <ul class="flex">
+              <li :class="{ active: selectedGenre === '' }" @click="handleActiveGenre('')"><a>All</a></li>
+              <li v-for="genre in genres" 
+                :key="genre.id" 
+                :class="{ active: selectedGenre === genre.name }" 
+                @click="handleActiveGenre(genre.name)"
+              >
+                <a>{{ genre.name }}</a>
+              </li>
+            </ul>
+          </div>        
         </div>
-        <div class="filter-group">
-          <h2>Release Year</h2>
-          <ul class="flex">
-            <li class="year-box">
-              <input type="number" class="from" value="" placeholder="e.g. 2000" min="1900" max="2024" v-model="fromYear">
-              to
-              <input type="number" class="to" value="" placeholder="e.g. 2024" min="1900" max="2024" v-model="toYear">
-            </li>
-          </ul>
-        </div>         
-        <div class="filter-group">
-          <h2>Genres</h2>
-          <ul class="flex">
-            <li :class="{ active: selectedGenre === '' }" @click="handleActiveGenre('')"><a>All</a></li>
-            <li v-for="genre in genres" 
-              :key="genre.id" 
-              :class="{ active: selectedGenre === genre.name }" 
-              @click="handleActiveGenre(genre.name)"
-            >
-              <a>{{ genre.name }}</a>
-            </li>
-          </ul>
-        </div>        
+
       </div>
     </div>
     <!-- /sideBar -->
@@ -69,6 +74,7 @@ const {
   updateStoredGenre, 
   incrementPageNumber,
   resetPageNumber,
+  toggleShowFilter,
 } = useStore();
 
 const userStore = useStore()
@@ -213,20 +219,37 @@ onUnmounted(() => {
 @import '../assets/scss/variables.scss';
 
 .side-bar {
-    width: 400px;
-    padding: 20px;
+  position: relative;
+  width: 400px;
+  padding: 20px;
 
-    .filter {
+    .filter-wrap {
       position: sticky;
       top: 90px;
-      flex-direction: column;
-      gap: 30px;
-      margin-top: 70px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      max-height: 80vh;    
+      margin-top: 10px;
+
+      .close-filter {
+        position: absolute;
+        right: 5px;
+        top: 5px;
+      }
 
       h2 {
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 10px;    
+      }
+
+      .filter-inner {
+        flex-direction: column;
+        gap: 30px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: 80vh;  
+        margin-top: 30px;
+      }
+
+      h3 {
         font-size: 18px;
         font-weight: bold;
         margin-bottom: 20px;    

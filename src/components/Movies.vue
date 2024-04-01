@@ -37,7 +37,7 @@
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         grid-gap: 20px;
         align-items: stretch; 
-        margin-top: 40px;       
+        margin-top: 30px;
 
         .card {
             height: 100%;
