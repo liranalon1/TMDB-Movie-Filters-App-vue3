@@ -63,6 +63,7 @@ import { useStore } from '../store';
 import { Movie, OptionsToSort } from "../types";
 import { getMovies, searchMovies } from '../services';
 import { genres } from '../utils';
+import { debounce } from '../utils'
 
 const { 
   storedGenre,
@@ -79,6 +80,7 @@ const {
 
 const userStore = useStore()
 const { storedSearchQuery, storedShowFilter } = storeToRefs(userStore)
+const callDebounce = debounce(loadMore, 500);
 
 watch(storedSearchQuery, (newVal) => {
   const query = newVal.toLowerCase();
@@ -122,9 +124,19 @@ const moviesToShow = computed(() => {
     movie.release_year <= toYearValue
   );
 
-  return moviesFromSearch.value.length
-    ? moviesFromSearch.value.filter(filterCondition)
-    : movies.value.filter(filterCondition);
+  const uniqueMovieTitles = new Set();
+  const filteredMovies = (moviesFromSearch.value.length
+    ? moviesFromSearch.value
+    : movies.value
+  ).filter((movie) => {
+    if (!uniqueMovieTitles.has(movie.title)) {
+      uniqueMovieTitles.add(movie.title);
+      return filterCondition(movie);
+    }
+    return false;
+  });
+
+  return filteredMovies;
 });
 
 function updateMovies(newArray: Movie[]) {
@@ -145,6 +157,8 @@ async function handleMovies(sort_by: string | number) {
 
 async function handleSearch() {
     isLoading.value = true;
+    moviesFromSearch.value = [];
+    updateStoredMoviesFromSearch([]);
     resetPageNumber();
     const data = await searchMovies(searchQuery.value);
     if (data) {
@@ -155,7 +169,6 @@ async function handleSearch() {
 };
 
 async function loadMore() {
-    isLoading.value = true;
     incrementPageNumber();
     
     if( searchQuery.value.length > 0 ) {
@@ -182,20 +195,23 @@ async function loadMore() {
 }
 
 function handleActiveGenre(genre: string) {
+  window.scrollTo(0, 0);  // prevent from load more movies when window scrolling
+
   if(genre !== "") {
     selectedGenre.value = genre;
   }else {
     selectedGenre.value = "";
   }
   
-  updateStoredGenre(genre);
+  updateStoredGenre(genre); 
 }
 
 function handleScroll() {
     const bottomOffset = 20;
     const bottomPage = (window.innerHeight + window.scrollY) >= document.body.offsetHeight - bottomOffset;
     if (bottomPage) {
-        loadMore();
+      isLoading.value = true;
+      callDebounce();
     }    
 }
 
