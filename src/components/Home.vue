@@ -245,7 +245,7 @@ onUnmounted(() => {
         gap: 30px;
         overflow-y: auto;
         overflow-x: hidden;
-        max-height: 80vh;  
+        max-height: 74vh;
         margin-top: 30px;
       }
 

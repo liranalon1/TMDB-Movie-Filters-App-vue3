@@ -7,7 +7,7 @@
         </router-link>
         <div class="filter-wrap flex" v-if="$route.name !== 'MovieDetails'">
           <Search />
-          <button @click="toggleShowFilter">Filter</button>
+          <button class="filter-icon" @click="toggleShowFilter"><img src="./assets/images/filter.svg"/></button>
         </div>        
       </div>
     </header>
@@ -61,6 +61,10 @@
     .filter-wrap {
       gap: 10px;
       align-items: center;
+
+      .filter-icon {
+        width: 18px;        
+      }
     }    
   }
 </style>
