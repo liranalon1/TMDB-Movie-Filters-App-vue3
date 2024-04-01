@@ -16,7 +16,7 @@
           </div>
         </div>
     </div>
-    <div v-else>
+    <div class="no-movies" v-else>
         <p>No movies found.</p>
     </div>     
 </template>
@@ -82,6 +82,14 @@
                 }
             }
         }
+    }
+
+    .no-movies {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 200px;
+        font-size: 28px;        
     }
 </style>
   
