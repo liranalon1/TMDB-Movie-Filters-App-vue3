@@ -5,6 +5,10 @@
         <router-link :to="{ path: '/' }">
           <div class="logo"><img src="./assets/images/logo.svg" /></div>
         </router-link>
+        <div class="filter-wrap flex" v-if="$route.name !== 'MovieDetails'">
+          <Search />
+          <button @click="handleFilter">Filter</button>
+        </div>        
       </div>
     </header>
 
@@ -13,7 +17,21 @@
 </template>
 
 <script setup lang="ts">
-  
+  import { ref } from 'vue';
+  import Search from './components/Search.vue';
+  import { useStore } from './store';
+
+  const { 
+    storedShowFilter,
+    updateStoredShowFilter,
+} = useStore();
+
+  const showFilter = ref<boolean>(storedShowFilter);
+
+  function handleFilter() {
+    showFilter.value = !showFilter.value;
+    updateStoredShowFilter(showFilter.value);
+  }  
 </script>
 
 <style lang="scss">
@@ -47,5 +65,10 @@
     .logo {
       width: 150px;
     }
+
+    .filter-wrap {
+      gap: 10px;
+      align-items: center;
+    }    
   }
 </style>

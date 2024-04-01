@@ -1,9 +1,5 @@
 <template>
   <div v-if="isLoading" class="loader"></div>
-  <div class="filter-wrap flex">
-    <Search @update-movies="updateMovies" @update-query="updateSearchQuery"/>
-    <button @click="handleFilter">Filter</button>
-  </div>
   <div class="main-wrap flex">
 
 <!-- sideBar -->
@@ -55,9 +51,9 @@
 </template>
 
 <script setup lang="ts">
-import Search from '../components/Search.vue';
 import Movies from '../components/Movies.vue';
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useStore } from '../store';
 import { Movie, OptionsToSort } from "../types";
 import { getMovies, searchMovies } from '../services';
@@ -68,14 +64,25 @@ const {
   storedGenreID,
   storedMovies,
   storedMoviesFromSearch,
-  storedSearchQuery,
-  storedShowFilter,
   updateStoredMoviesFromSearch,
   updateStoredMovies, 
   updateStoredGenre, 
-  updateStoredShowFilter,
   incrementPageNumber,
+  resetPageNumber,
 } = useStore();
+
+const userStore = useStore()
+const { storedSearchQuery, storedShowFilter } = storeToRefs(userStore)
+
+watch(storedSearchQuery, (newVal) => {
+  const query = newVal.toLowerCase();
+  searchQuery.value = query;
+  handleSearch();
+});
+
+watch(storedShowFilter, (newVal) => {
+  showFilter.value = newVal;
+});
 
 const sortOptions: OptionsToSort = {
     'popular': 'popularity.desc',
@@ -114,20 +121,11 @@ const moviesToShow = computed(() => {
     : movies.value.filter(filterCondition);
 });
 
-function handleFilter() {
-  showFilter.value = !showFilter.value;
-  updateStoredShowFilter(showFilter.value);
-}
-
 function updateMovies(newArray: Movie[]) {
   updateStoredGenre("");  
   selectedGenre.value = "";
   updateStoredMoviesFromSearch(newArray);
   moviesFromSearch.value = newArray;
-};
-
-function updateSearchQuery(value: string) {
-  searchQuery.value = value;
 };
 
 async function handleMovies(sort_by: string | number) {
@@ -139,6 +137,17 @@ async function handleMovies(sort_by: string | number) {
     }
 }
 
+async function handleSearch() {
+    isLoading.value = true;
+    resetPageNumber();
+    const data = await searchMovies(searchQuery.value);
+    if (data) {
+      updateStoredMoviesFromSearch(data);
+      moviesFromSearch.value = data;
+      isLoading.value = false;
+    }
+};
+
 async function loadMore() {
     isLoading.value = true;
     incrementPageNumber();
@@ -149,8 +158,8 @@ async function loadMore() {
             const arr = [...moviesFromSearch.value, ...data];
             updateMovies(arr)
             isLoading.value = false;
-        }      
-
+        }
+        
         return
     }
 
@@ -202,11 +211,6 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 @import '../assets/scss/variables.scss';
-
-.filter-wrap {
-  gap: 10px;
-  align-items: center;
-}
 
 .side-bar {
     width: 400px;

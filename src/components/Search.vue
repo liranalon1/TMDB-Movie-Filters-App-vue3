@@ -1,5 +1,4 @@
 <template>
-    <div v-if="isLoading" class="loader"></div>
     <div class="search">
         <div class="inner">
             <input type="text" v-model="searchQuery" @input="search" placeholder="Search for a movie" autofocus />
@@ -8,53 +7,21 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted, onUnmounted } from 'vue';
+    import { ref } from 'vue';
     import { debounce } from '../utils';
-    import { searchMovies } from '../services';
     import { useStore } from '../store';
 
     const { 
-        storedSearchQuery,
         updateStoredSearchQuery,
-        resetPageNumber,
+        storedSearchQuery,
     } = useStore();
 
-    const emits = defineEmits(['update-movies', 'update-query']);
-
-    const isLoading = ref(false);
     const searchQuery = ref(storedSearchQuery);
-    const showResults = ref(false);
     const search = debounce(handleSearch, 500);
 
-    function handleClickOutside(event: MouseEvent) {
-        const target = event.target as HTMLElement;
-        const searchElem = document.querySelector('.search');
-
-        if (searchElem && !searchElem.contains(target)) {
-            showResults.value = false;
-        }
-    };
-
-    async function handleSearch() {
-        isLoading.value = true;
-        const value = searchQuery.value.toLowerCase();
-        resetPageNumber();
-        updateStoredSearchQuery(value);
-        const data = await searchMovies(value);
-        if (data) {
-            emits('update-movies', data);
-            emits('update-query', value);
-            isLoading.value = false;
-        }
-    };
-
-    onMounted(() => {
-        document.addEventListener('click', handleClickOutside);
-    });
-
-    onUnmounted(() => {
-        document.removeEventListener('click', handleClickOutside);
-    });
+    function handleSearch() {
+        updateStoredSearchQuery(searchQuery.value);
+    }
 </script>
 
 <style lang="scss" scoped>
